@@ -1,7 +1,6 @@
 const sb = window.supabase.createClient(window.GROWTH_SUPABASE_URL, window.GROWTH_SUPABASE_KEY, {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 let session=null;
 let authReady=false;
-let authFlow='';
 function setAppAccess(isAuthenticated){
   const app=document.querySelector('.app');
   if(!app)return;
@@ -48,7 +47,8 @@ function handleInviteRecovery(){
   form.onsubmit=async e=>{e.preventDefault();const p=document.querySelector('#invitePassword').value,p2=document.querySelector('#invitePassword2').value,err=document.querySelector('#inviteError');if(p!==p2){err.textContent='As senhas não coincidem.';return}if(p.length<8){err.textContent='Use pelo menos 8 caracteres.';return}const {error}=await sb.auth.updateUser({password:p});if(error){err.textContent=error.message;return}history.replaceState(null,'','#/dashboard');const r=await sb.auth.getSession();session=r.data.session;setAppAccess(true);renderAuth();if(window.onGrowthAuth)window.onGrowthAuth(session)};
   return true;
 }
-\nasync function initAuth(){
+
+async function initAuth(){
   const {data,error}=await sb.auth.getSession();
   if(error){alert('Falha ao recuperar a sessão: '+error.message);return;}
   session=data.session; authReady=true; setAppAccess(!!session); if(handleInviteRecovery()) return; renderAuth();
@@ -57,6 +57,6 @@ function handleInviteRecovery(){
 }
 function renderAuth(){const el=document.querySelector('#authbar');if(!el)return;if(session){el.innerHTML='<span class="userpill">'+escAuth(session.user.email||'usuário')+'</span><button id="profileBtn">Meu perfil</button><button id="logout">Sair</button>';document.querySelector('#profileBtn').onclick=()=>{location.hash='/profile'};document.querySelector('#logout').onclick=()=>sb.auth.signOut({scope:'local'});}else{el.innerHTML='<input id="authEmail" type="email" placeholder="E-mail"><input id="authPass" type="password" placeholder="Senha"><button class="primary" id="login">Entrar</button><button id="signup">Criar acesso</button><small class="userpill">Primeiro acesso: use seu e-mail institucional.</small>';document.querySelector('#login').onclick=()=>authAction('login');document.querySelector('#signup').onclick=()=>authAction('signup');}}
 async async function requestPasswordReset(){const email=document.querySelector('#gateEmail')?.value.trim();const message=document.querySelector('#gateMessage');if(!email){if(message)message.textContent='Informe seu e-mail para receber o link de recuperação.';return}if(message)message.textContent='Enviando link…';const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+'/#/reset-password'});if(message)message.textContent=error?error.message:'Se o e-mail estiver cadastrado, enviaremos um link para redefinir a senha.'}
-function authAction(action){const email=document.querySelector('#authEmail').value.trim(),password=document.querySelector('#authPass').value;if(!email||!password)return alert('Informe e-mail e senha.');const r=action==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin}});if(r.error)alert(r.error.message);else alert(action==='signup'?'Acesso criado. Se a confirmação de e-mail estiver ativa, confirme o endereço e entre novamente.':'Login realizado.');}
+async function authAction(action){const email=document.querySelector('#authEmail').value.trim(),password=document.querySelector('#authPass').value;if(!email||!password)return alert('Informe e-mail e senha.');const r=action==='login'?await sb.auth.signInWithPassword({email,password}):await sb.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin}});if(r.error)alert(r.error.message);else alert(action==='signup'?'Acesso criado. Se a confirmação de e-mail estiver ativa, confirme o endereço e entre novamente.':'Login realizado.');}
 function escAuth(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 window.growthAuth={sb,getSession:()=>session};initAuth();
