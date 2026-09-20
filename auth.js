@@ -7,6 +7,7 @@ function setAppAccess(isAuthenticated){
   const app=document.querySelector('.app');
   if(!app)return;
   app.hidden=!isAuthenticated;
+  app.style.display=isAuthenticated?'grid':'none';
   let gate=document.querySelector('#authGate');
   if(!gate){
     gate=document.createElement('section');
@@ -21,6 +22,7 @@ function setAppAccess(isAuthenticated){
   }else{
     gate.remove();
   }
+  if(gate) gate.style.display=isAuthenticated?'none':'grid';
 }
 async function gateAuthAction(action){
   const email=document.querySelector('#gateEmail')?.value.trim();
