@@ -2,10 +2,11 @@ const sb = window.supabase.createClient(window.GROWTH_SUPABASE_URL, window.GROWT
 let session=null;
 let authReady=false;
 function setAppAccess(isAuthenticated){
+  document.body.classList.toggle('auth-authenticated',!!isAuthenticated);
+  document.body.classList.toggle('auth-required',!isAuthenticated);
   const app=document.querySelector('.app');
   if(!app)return;
   app.hidden=!isAuthenticated;
-  document.body.classList.toggle('auth-required',!isAuthenticated);
   let gate=document.querySelector('#authGate');
   if(!gate){
     gate=document.createElement('section');
