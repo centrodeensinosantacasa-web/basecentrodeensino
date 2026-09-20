@@ -1,0 +1,31 @@
+name: Database security tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  database-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Initialize Supabase CLI workspace
+        run: supabase init
+
+      - name: Start local database
+        run: supabase db start
+
+      - name: Run pgTAP database tests
+        run: supabase test db
+
+      - name: Stop local database
+        if: always()
+        run: supabase stop
