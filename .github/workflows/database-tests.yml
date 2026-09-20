@@ -21,7 +21,7 @@ jobs:
         run: supabase init
 
       - name: Start local database
-        run: supabase start --debug
+        run: supabase db start
 
       - name: Run pgTAP database tests
         run: supabase test db
