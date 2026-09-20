@@ -1,6 +1,6 @@
 begin;
 
-select plan(24);
+select plan(31);
 
 select has_table('public','organizations','organizations table exists');
 select has_table('public','profiles','profiles table exists');
@@ -9,6 +9,9 @@ select has_table('public','leads','leads table exists');
 select has_table('public','campaigns','campaigns table exists');
 select has_table('public','tasks','tasks table exists');
 select has_table('public','audit_logs','audit_logs table exists');
+select has_table('public','rdstation_connections','rdstation_connections table exists');
+select has_table('public','rdstation_sync_runs','rdstation_sync_runs table exists');
+select has_table('public','rdstation_credentials','rdstation_credentials table exists');
 
 select ok(
   (select count(*) = 7
@@ -52,6 +55,12 @@ select ok(
 
 select has_column('public','leads','utm_source','leads has utm_source');
 select has_column('public','leads','utm_campaign','leads has utm_campaign');
+select has_column('public','leads','external_source','leads has external_source');
+select has_column('public','leads','external_id','leads has external_id');
+
+select ok((select relrowsecurity from pg_class where oid='public.rdstation_connections'::regclass),'RD connections has RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.rdstation_sync_runs'::regclass),'RD sync runs has RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.rdstation_credentials'::regclass),'RD credentials has RLS enabled');
 
 select policies_are(
   'public','organizations',
@@ -94,6 +103,27 @@ select policies_are(
   ARRAY['audit_org_select'],
   'audit_logs exposes only the organization select policy'
 );
+
+select policies_are(
+  'public','rdstation_connections',
+  ARRAY['rdstation_connections_org_all'],
+  'RD connections exposes only the organization policy'
+);
+
+select policies_are(
+  'public','rdstation_sync_runs',
+  ARRAY['rdstation_sync_runs_org_select'],
+  'RD sync runs exposes only the organization select policy'
+);
+
+select policies_are(
+  'public','rdstation_credentials',
+  ARRAY['rdstation_credentials_backend_all'],
+  'RD credentials exposes only the backend policy'
+);
+
+select ok(not has_table_privilege('anon','public.rdstation_credentials','SELECT'),'anon cannot select RD credentials');
+select ok(not has_table_privilege('authenticated','public.rdstation_credentials','SELECT'),'authenticated cannot select RD credentials');
 
 select ok(
   exists (
