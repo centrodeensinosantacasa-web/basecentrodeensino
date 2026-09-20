@@ -12,3 +12,4 @@
 .auth-actions{display:flex;gap:10px;flex-wrap:wrap}
 .auth-form small{min-height:20px;opacity:.7}
 body.auth-required .app{display:none!important}
+\n.auth-actions button{flex:1;min-width:140px}.auth-actions button:not(.primary){border:1px solid #cdd8e5;background:#fff;color:#17324d;padding:10px 12px;border-radius:8px;cursor:pointer}.auth-error{color:#b42318!important;min-height:20px}.profile-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}@media(max-width:600px){.profile-grid{grid-template-columns:1fr}}
