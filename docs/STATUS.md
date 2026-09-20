@@ -25,7 +25,7 @@ Atualizado em 20/09/2026.
 
 ## Pendente / próximo bloco
 - Primeiro usuário institucional precisa se cadastrar/logar para validar o fluxo autenticado ponta a ponta.
-- Owner/atribuição de lead ainda deve ser ligado ao `profiles.id` real na interface.
+- Atribuição de lead agora persiste o `profiles.id` real e exibe o nome do usuário atual quando disponível; distribuição entre outros usuários ainda depende de uma política/listagem de perfis adequada.
 - Histórico detalhado de etapas/interações ainda será expandido conforme Fase D do briefing.
 - Backup/restauração automatizado e teste formal de restauração ainda pendentes.
 - Integrações Google Ads/Meta/WhatsApp e publicação externa continuam dependentes de contas, credenciais e autorização.
