@@ -33,7 +33,21 @@ async function gateAuthAction(action){
   if(r.error){if(message)message.textContent=r.error.message;return}
   if(message)message.textContent=action==='signup'?'Acesso criado. Se a confirmação de e-mail estiver ativa, confirme seu endereço.':'Login realizado.';
 }
-async function initAuth(){
+
+function handleInviteRecovery(){
+  const hash=location.hash||'';
+  const isRecovery=hash.includes('type=invite')||hash.includes('type=recovery')||hash.includes('access_token=');
+  if(!isRecovery)return false;
+  const gate=document.querySelector('#authGate');
+  if(!gate)return false;
+  gate.hidden=false;
+  gate.innerHTML=`<div class="auth-card"><div class="brand"><div class="mark">CE</div><div><b>Centro de Ensino</b><span>Growth</span></div></div><h2>Ative sua conta</h2><p>Defina uma senha para concluir seu primeiro acesso.</p><form class="auth-form" id="inviteForm"><input id="invitePassword" type="password" minlength="8" required placeholder="Nova senha"><input id="invitePassword2" type="password" minlength="8" required placeholder="Confirme a senha"><button class="primary" type="submit">Ativar conta</button><p class="auth-error" id="inviteError"></p></form></div>`;
+  gate.classList.add('auth-gate');
+  const form=document.querySelector('#inviteForm');
+  form.onsubmit=async e=>{e.preventDefault();const p=document.querySelector('#invitePassword').value,p2=document.querySelector('#invitePassword2').value,err=document.querySelector('#inviteError');if(p!==p2){err.textContent='As senhas não coincidem.';return}if(p.length<8){err.textContent='Use pelo menos 8 caracteres.';return}const {error}=await sb.auth.updateUser({password:p});if(error){err.textContent=error.message;return}history.replaceState(null,'','#/dashboard');setAppAccess(true);if(window.onGrowthAuth)window.onGrowthAuth(session)};
+  return true;
+}
+\nasync function initAuth(){
   const {data,error}=await sb.auth.getSession();
   if(error){alert('Falha ao recuperar a sessão: '+error.message);return;}
   session=data.session; authReady=true; setAppAccess(!!session); renderAuth();
