@@ -67,6 +67,12 @@ create policy rdstation_sync_runs_org_select on public.rdstation_sync_runs
 
 revoke all on public.rdstation_credentials from public, anon, authenticated;
 grant select, insert, update, delete on public.rdstation_credentials to service_role;
+
+drop policy if exists rdstation_credentials_backend_all on public.rdstation_credentials;
+create policy rdstation_credentials_backend_all on public.rdstation_credentials
+  for all to service_role
+  using (true)
+  with check (true);
 grant select, insert, update, delete on public.rdstation_connections to authenticated;
 grant select on public.rdstation_sync_runs to authenticated;
 revoke all on public.rdstation_connections, public.rdstation_sync_runs from anon;
