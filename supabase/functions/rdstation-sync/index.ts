@@ -214,8 +214,24 @@ async function importAll(orgId: string) {
   return { fetched, inserted, updated, skipped };
 }
 
+async function configureWebhooks(access: string, orgId: string) {
+  const base = SUPABASE_URL + "/functions/v1/rdstation-sync/webhook/" + encodeURIComponent(RD_WEBHOOK_PATH_SECRET) + "?organization_id=" + encodeURIComponent(orgId);
+  for (const event_type of ["WEBHOOK.CONVERTED", "WEBHOOK.MARKED_OPPORTUNITY"]) {
+    const r = await fetch("https://api.rd.services/integrations/webhooks", {
+      method: "POST",
+      headers: { Authorization: "Bearer " + access, "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ event_type, entity_type: "CONTACT", url: base, http_method: "POST", include_relations: ["CONTACT_FUNNEL"] }),
+    });
+    if (!r.ok && r.status !== 400) {
+      const data = await r.json().catch(() => ({}));
+      console.warn("rd_webhook_setup_failed", event_type, data);
+    }
+  }
+}
+
 async function handleWebhook(req: Request, orgId: string) {
-  const body = await req.json();
+  let body: any = {};
+  try { body = await req.json(); } catch { return response({ ok: true, validation: true }); }
   // RD webhooks may retry; external_id makes processing idempotent.
   const result = await upsertLead(orgId, body);
   return response({ ok: true, result });
@@ -258,6 +274,7 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
         last_error: null,
       }, { onConflict: "organization_id,provider" });
+      await configureWebhooks(access, orgId);
       return new Response('<!doctype html><meta charset="utf-8"><title>RD Station conectado</title><script>window.close();document.body.innerHTML="<h2>RD Station conectado. Você pode voltar ao Centro de Ensino Growth.</h2>"</script>', { headers: { "Content-Type": "text/html; charset=utf-8" } });
     }
 
