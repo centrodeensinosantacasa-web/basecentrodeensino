@@ -55,8 +55,8 @@ select has_column('public','leads','utm_campaign','leads has utm_campaign');
 
 select policies_are(
   'public','organizations',
-  ARRAY['organizations_member_select','organizations_bootstrap_select'],
-  'organizations exposes only the expected select policies'
+  ARRAY['organizations_authenticated_select'],
+  'organizations exposes only the consolidated authenticated select policy'
 );
 
 select policies_are(
