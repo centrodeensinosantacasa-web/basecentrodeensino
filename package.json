@@ -1,0 +1,1 @@
+{"name":"centro-ensino-growth-mvp","version":"0.1.0","private":true,"scripts":{"serve":"node scripts/server.mjs","test":"node tests/smoke.mjs"}}
