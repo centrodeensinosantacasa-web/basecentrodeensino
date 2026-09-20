@@ -64,3 +64,37 @@ create trigger audit_tasks after insert or update or delete on public.tasks
 for each row execute function private.audit_growth_change();
 
 comment on column public.campaigns.period is 'Período editorial/operacional informado pela aplicação; não representa publicação confirmada.';
+
+alter table public.leads
+  add column if not exists utm_source text,
+  add column if not exists utm_medium text,
+  add column if not exists utm_campaign text,
+  add column if not exists utm_content text;
+
+create index if not exists leads_org_utm_campaign_idx
+  on public.leads (organization_id, utm_campaign);
+
+create or replace function private.audit_growth_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = pg_catalog, public
+as $$
+declare
+  org_id uuid;
+  entity_id uuid;
+  actor uuid;
+  metadata jsonb;
+begin
+  org_id := case when tg_op = 'DELETE' then old.organization_id else new.organization_id end;
+  entity_id := case when tg_op = 'DELETE' then old.id else new.id end;
+  actor := auth.uid();
+  metadata := jsonb_build_object('source','database_trigger','table',tg_table_name);
+  if tg_table_name = 'leads' and tg_op = 'UPDATE' and old.stage is distinct from new.stage then
+    metadata := metadata || jsonb_build_object('from_stage',old.stage,'to_stage',new.stage);
+  end if;
+  insert into public.audit_logs(organization_id,actor_id,action,entity_type,entity_id,metadata)
+  values(org_id,actor,lower(tg_op),tg_table_name,entity_id,metadata);
+  return case when tg_op = 'DELETE' then old else new end;
+end;
+$$;
