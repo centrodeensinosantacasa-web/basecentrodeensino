@@ -12,7 +12,7 @@ Atualizado em 20/09/2026.
 - Campo de período de campanha persistido no banco.
 - Trilha de auditoria por triggers para cursos, leads, campanhas e tarefas; metadados do trigger não armazenam PII do lead.
 - `updated_at` automatizado por trigger para cursos, leads e campanhas.
-- Segurança: advisor sem alertas no último teste.
+- Segurança: RLS/grants/triggers foram conferidos; o advisor atual mantém 1 aviso de Auth para proteção contra senhas vazadas desabilitada. A documentação atual do Supabase indica esse recurso como disponível no Pro ou superior.
 - Projeto preparado para publicação no Netlify e repositório GitHub institucional.
 
 ## Testado
