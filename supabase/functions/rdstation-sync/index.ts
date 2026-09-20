@@ -126,21 +126,25 @@ async function getAccessToken(orgId: string) {
   return refreshToken(orgId);
 }
 
-function rdContact(raw: any) {
+function rdContact(input: any) {
+  // RD webhooks wrap the contact in `contact`; contact API responses are already flat.
+  const raw = input?.contact && typeof input.contact === "object" ? input.contact : input;
+  const funnel = raw?.funnel && typeof raw.funnel === "object" ? raw.funnel : {};
   const legal = Array.isArray(raw?.legal_bases) ? raw.legal_bases : [];
   const consent = legal.some((x: any) => x?.category === "communications" && x?.status === "granted");
+  const origin = funnel.origin || raw.origin || "";
   return {
     external_id: raw.uuid || raw.id || raw.email,
     name: raw.name || raw.email || "Lead RD Station",
     email: raw.email || null,
     phone: raw.mobile_phone || raw.personal_phone || raw.phone || null,
-    source: "rd_station",
+    source: origin || "rd_station",
     consent,
     utm_source: raw.utm_source || raw.cf_utm_source || null,
     utm_medium: raw.utm_medium || raw.cf_utm_medium || null,
     utm_campaign: raw.utm_campaign || raw.cf_utm_campaign || null,
     utm_content: raw.utm_content || raw.cf_utm_content || null,
-    stage: raw.opportunity === true ? "oportunidade" : "novo",
+    stage: funnel.opportunity === true || raw.opportunity === true ? "oportunidade" : "novo",
   };
 }
 
@@ -247,7 +251,10 @@ Deno.serve(async (req) => {
       const secret = path.split("/")[2];
       if (!secret || secret !== RD_WEBHOOK_PATH_SECRET) return response({ error: "unauthorized" }, 401);
       const orgId = url.searchParams.get("organization_id");
-      if (!orgId) return response({ error: "missing_organization_id" }, 400);
+      if (!orgId || !/^[0-9a-f-]{36}$/i.test(orgId)) return response({ error: "invalid_organization_id" }, 400);
+      const { data: connection } = await admin.from("rdstation_connections")
+        .select("status").eq("organization_id", orgId).eq("provider", "rd_station_marketing").maybeSingle();
+      if (connection?.status !== "connected") return response({ error: "rdstation_not_connected" }, 409);
       return await handleWebhook(req, orgId);
     }
 
