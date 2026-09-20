@@ -53,4 +53,4 @@ O Netlify pode publicar a partir de um repositório Git e redeployar automaticam
 
 ## Estado atual
 
-O repositório GitHub `centrodeensinosantacasa-web/basecentrodeensino` está populado com o MVP funcional, migrações, testes, documentação e configuração de CI/Netlify. O primeiro deploy Netlify ainda depende de conectar este repositório a um site Netlify e autorizar o acesso da conta Netlify.
+O repositório GitHub `centrodeensinosantacasa-web/basecentrodeensino` está populado com o MVP funcional, migrações, testes, documentação e configuração de CI/Netlify. O repositório está conectado ao Netlify e há um deploy de produção publicado a partir da branch `main` em `https://cescoourinhos.netlify.app`.
