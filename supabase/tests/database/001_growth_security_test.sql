@@ -1,6 +1,6 @@
 begin;
 
-select plan(17);
+select plan(24);
 
 select has_table('public','organizations','organizations table exists');
 select has_table('public','profiles','profiles table exists');
@@ -52,6 +52,48 @@ select ok(
 
 select has_column('public','leads','utm_source','leads has utm_source');
 select has_column('public','leads','utm_campaign','leads has utm_campaign');
+
+select policies_are(
+  'public','organizations',
+  ARRAY['organizations_member_select','organizations_bootstrap_select'],
+  'organizations exposes only the expected select policies'
+);
+
+select policies_are(
+  'public','profiles',
+  ARRAY['profiles_self_select','profiles_self_insert'],
+  'profiles exposes only the expected self policies'
+);
+
+select policies_are(
+  'public','courses',
+  ARRAY['courses_org_all'],
+  'courses exposes only the organization policy'
+);
+
+select policies_are(
+  'public','leads',
+  ARRAY['leads_org_all'],
+  'leads exposes only the organization policy'
+);
+
+select policies_are(
+  'public','campaigns',
+  ARRAY['campaigns_org_all'],
+  'campaigns exposes only the organization policy'
+);
+
+select policies_are(
+  'public','tasks',
+  ARRAY['tasks_org_all'],
+  'tasks exposes only the organization policy'
+);
+
+select policies_are(
+  'public','audit_logs',
+  ARRAY['audit_org_select'],
+  'audit_logs exposes only the organization select policy'
+);
 
 select ok(
   exists (
