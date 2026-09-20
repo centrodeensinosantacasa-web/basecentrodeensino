@@ -34,13 +34,25 @@ declare
   org_id uuid;
   entity_id uuid;
   actor uuid;
+  metadata jsonb;
+  old_stage text;
+  new_stage text;
 begin
   org_id := case when tg_op = 'DELETE' then old.organization_id else new.organization_id end;
   entity_id := case when tg_op = 'DELETE' then old.id else new.id end;
   actor := auth.uid();
+  metadata := jsonb_build_object('source','database_trigger','table',tg_table_name);
+
+  if tg_table_name = 'leads' and tg_op = 'UPDATE' then
+    old_stage := to_jsonb(old)->>'stage';
+    new_stage := to_jsonb(new)->>'stage';
+    if old_stage is distinct from new_stage then
+      metadata := metadata || jsonb_build_object('from_stage',old_stage,'to_stage',new_stage);
+    end if;
+  end if;
+
   insert into public.audit_logs(organization_id,actor_id,action,entity_type,entity_id,metadata)
-  values(org_id,actor,lower(tg_op),tg_table_name,entity_id,
-         jsonb_build_object('source','database_trigger','table',tg_table_name));
+  values(org_id,actor,lower(tg_op),tg_table_name,entity_id,metadata);
   return case when tg_op = 'DELETE' then old else new end;
 end;
 $$;
@@ -73,28 +85,3 @@ alter table public.leads
 
 create index if not exists leads_org_utm_campaign_idx
   on public.leads (organization_id, utm_campaign);
-
-create or replace function private.audit_growth_change()
-returns trigger
-language plpgsql
-security definer
-set search_path = pg_catalog, public
-as $$
-declare
-  org_id uuid;
-  entity_id uuid;
-  actor uuid;
-  metadata jsonb;
-begin
-  org_id := case when tg_op = 'DELETE' then old.organization_id else new.organization_id end;
-  entity_id := case when tg_op = 'DELETE' then old.id else new.id end;
-  actor := auth.uid();
-  metadata := jsonb_build_object('source','database_trigger','table',tg_table_name);
-  if tg_table_name = 'leads' and tg_op = 'UPDATE' and old.stage is distinct from new.stage then
-    metadata := metadata || jsonb_build_object('from_stage',old.stage,'to_stage',new.stage);
-  end if;
-  insert into public.audit_logs(organization_id,actor_id,action,entity_type,entity_id,metadata)
-  values(org_id,actor,lower(tg_op),tg_table_name,entity_id,metadata);
-  return case when tg_op = 'DELETE' then old else new end;
-end;
-$$;
