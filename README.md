@@ -45,6 +45,29 @@ O projeto Supabase conectado durante o desenvolvimento está em São Paulo (`sa-
 
 Os arquivos em `supabase/migrations/` foram reconciliados para refletir o schema funcional atual e podem ser usados como referência de infraestrutura. A instância de produção/desenvolvimento já existente tem seu próprio histórico de migrations no Supabase.
 
+
+## RD Station Marketing
+
+A integração com o RD Station Marketing foi preparada no backend com OAuth 2.0, importação histórica da segmentação padrão de todos os contatos e endpoint de webhook para novas conversões/oportunidades.
+
+A Edge Function `rdstation-sync` mantém os tokens criptografados no backend e usa o ID externo do contato para idempotência. A interface ganhou a seção “RD Station”, com conexão e sincronização manual.
+
+Antes da primeira conexão, é necessário cadastrar no Supabase Edge Function Secrets: `RD_CLIENT_ID`, `RD_CLIENT_SECRET`, `RD_REDIRECT_URI`, `RD_OAUTH_STATE_SECRET`, `RD_TOKEN_ENCRYPTION_KEY`, `RD_WEBHOOK_PATH_SECRET` e `PUBLIC_APP_URL`. O `RD_REDIRECT_URI` deve ser exatamente a URL de callback cadastrada no aplicativo da RD Station.
+
+A URL de callback esperada pelo backend é:
+
+`https://twmkkkrqvciajhvikzfe.supabase.co/functions/v1/rdstation-sync/callback`
+
+Os tokens não devem ser colocados no frontend ou no GitHub.
+
+### Fluxo de sincronização
+
+1. Usuário autenticado clica em “Conectar RD Station”.
+2. O backend gera o `state` e redireciona para a autorização OAuth da RD Station.
+3. O callback troca o `code` por `access_token`/`refresh_token` e grava somente ciphertext no banco.
+4. “Importar/atualizar leads agora” percorre a segmentação padrão “Todos os contatos da base de Leads” e consulta os dados detalhados dos contatos.
+5. Novas conversões/oportunidades podem chegar pelo webhook da RD Station, com processamento idempotente pelo identificador externo.
+
 ## Deploy Netlify
 
 A configuração está preparada para GitHub + deploy contínuo. Veja `docs/NETLIFY.md`.
